@@ -12,9 +12,8 @@ except ImportError:
 # 1. Ρύθμιση της σελίδας για επαγγελματικό σχεδιασμό (UI/UX)
 st.set_page_config(page_title="LogicForge AI Pro", page_icon="⚙️", layout="centered")
 
-# ΕΔΩ ΒΑΖΕΙΣ ΤΟ ΕΠΑΓΓΕΛΜΑΤΙΚΟ ΣΟΥ ΚΛΕΙΔΙ (Αυτό που φτιάξαμε στην αρχή!)
-# Αν δεν δουλεύει, βάλε ένα ολοκαίνουργιο κλειδί gsk_ από το Groq Cloud
-GROQ_API_KEY = "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"
+# ΤΟ ΝΕΟ ΣΟΥ ΕΠΑΓΓΕΛΜΑΤΙΚΟ ΚΛΕΙΔΙ (Διορθωμένο στη μεταβλητή του)
+GROQ_API_KEY = "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"
 
 # Σχεδιασμός Αριστερής Μπάρας (Sidebar)
 with st.sidebar:
@@ -126,4 +125,3 @@ with col2:
 with col3:
     st.subheader("🔒 Absolute Control")
     st.caption("The code protects you. You drive the machine.")
-
