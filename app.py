@@ -2,20 +2,15 @@ import streamlit as st
 import sys
 import subprocess
 
-# Αυτόματο κατέβασμα της επίσημης βιβλιοθήκης της Groq
+# Αυτόματο κατέβασμα της ελεύθερης βιβλιοθήκης αν δεν υπάρχει
 try:
-    from groq import Groq
+    import g4f
 except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "groq"])
-    from groq import Groq
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "g4f"])
+    import g4f
 
 # 1. Ρύθμιση της σελίδας για επαγγελματικό σχεδιασμό (UI/UX)
 st.set_page_config(page_title="LogicForge AI Pro", page_icon="⚙️", layout="centered")
-
-# ΑΣΦΑΛΗΣ ΠΑΡΑΚΑΜΨΗ: Σπάμε το ολοκαίνουργιο κλειδί σου στα δύο για να μην το καταλάβει το GitHub!
-part1 = "gsk_"
-part2 = "4Pw2Js7hqmpPD3sHMwo6WGdyb3FYCLteCKSKBRcitfsHgG82a0ex"
-GROQ_API_KEY = part1 + part2
 
 # Σχεδιασμός Αριστερής Μπάρας (Sidebar)
 with st.sidebar:
@@ -33,7 +28,7 @@ with st.sidebar:
     st.subheader("☕ Support & Upgrade")
     st.markdown('[![Buy Me A Coffee](https://shields.io)](https://buymeacoffee.com)')
     st.write("---")
-    st.caption("Version v3.0 (Premium Pro)\nPowered by Llama 3 (Ultra-Fast).")
+    st.caption("Version v3.5 (Premium Pro)\nPowered by GPT-4o Free Engine.")
 
 # 2. ΣΥΣΤΗΜΑ LOGIN (Αναγνώριση Ονόματος)
 if "user_name" not in st.session_state:
@@ -63,7 +58,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "system", 
-            "content": f"You are a cold Logic Engineer. Ignore emotions. ALWAYS reply in the exact same language the user writes to you. Address the user by their name: {st.session_state.user_name}. Analyze everything exclusively based on logic, pros and cons, and provide a crystal clear, brutal, and realistic conclusion."
+            "content": f"You are a cold Logic Engineer. Ignore emotions. ALWAYS reply in the exact same language the user writes to you. Address the user by their name: {st.session_state.user_name}. Analyze everything exclusively based on logic, pros and cons, and provide a crystal clear, brutal, and realistic conclusion. Remember all previous messages."
         }
     ]
 
@@ -94,20 +89,28 @@ else:
         
         with st.chat_message("assistant", avatar="🧠"):
             message_placeholder = st.empty()
-            message_placeholder.write("🧠 High-speed engine is processing data...")
+            message_placeholder.write("🧠 High-speed free engine is processing data...")
             
             try:
-                client = Groq(api_key=GROQ_API_KEY)
-                chat_completion = client.chat.completions.create(
-                    messages=st.session_state.messages,
-                    model="llama3-8b-8192",
+                # Σύνδεση με τον δωρεάν και ελεύθερο server χωρίς κλειδιά!
+                response = g4f.ChatCompletion.create(
+                    model="gpt-4o",
+                    messages=st.session_state.messages
                 )
-                response = chat_completion.choices.message.content
                 message_placeholder.write(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
             except Exception as e:
-                message_placeholder.write("An authentication error occurred. Please make sure your Groq API Key is valid.")
+                try:
+                    response = g4f.ChatCompletion.create(
+                        model="llama-3.1-70b",
+                        messages=st.session_state.messages
+                    )
+                    message_placeholder.write(response)
+                    st.session_state.messages.append({"role": "assistant", "content": response})
+                    st.rerun()
+                except Exception as e2:
+                    message_placeholder.write("Free servers are temporarily busy. Please retry in a few seconds.")
 
 st.write("---")
 col1, col2, col3 = st.columns(3)
