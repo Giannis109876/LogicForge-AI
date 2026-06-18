@@ -12,8 +12,8 @@ except ImportError:
 # 1. Ρύθμιση της σελίδας για επαγγελματικό σχεδιασμό (UI/UX)
 st.set_page_config(page_title="LogicForge AI Pro", page_icon="⚙️", layout="centered")
 
-# ΤΟ ΝΕΟ ΣΟΥ ΕΠΑΓΓΕΛΜΑΤΙΚΟ ΚΛΕΙΔΙ (Διορθωμένο στη μεταβλητή του)
-GROQ_API_KEY = "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"
+# ΑΠΟΛΥΤΗ ΑΣΦΑΛΕΙΑ: Το κλειδί διαβάζεται κρυφά από το Streamlit Cloud
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
 # Σχεδιασμός Αριστερής Μπάρας (Sidebar)
 with st.sidebar:
@@ -21,7 +21,6 @@ with st.sidebar:
     st.write("---")
     st.subheader("👑 Account Status")
     
-    # Έλεγχος αν ο χρήστης έχει γράψει όνομα
     if "user_name" in st.session_state and st.session_state.user_name:
         st.success(f"👤 User: {st.session_state.user_name}")
         st.warning("⚠️ Plan: Free Trial (3 left)")
@@ -49,7 +48,7 @@ if not st.session_state.user_name:
             st.rerun()
         else:
             st.warning("Please enter a valid name.")
-    st.stop() # Σταματάει τον κώδικα εδώ αν δεν έχει γίνει login!
+    st.stop()
 
 # --- ΑΝ Ο ΧΡΗΣΤΗΣ ΕΧΕΙ ΚΑΝΕΙ LOGIN, ΒΛΕΠΕΙ ΤΑ ΠΑΡΑΚΑΤΩ ---
 
@@ -69,7 +68,6 @@ if "messages" not in st.session_state:
 if "prompt_count" not in st.session_state:
     st.session_state.prompt_count = 0
 
-# Εμφάνιση των προηγούμενων μηνυμάτων (Στυλ Chat)
 for message in st.session_state.messages:
     if message["role"] == "user":
         with st.chat_message("user"):
@@ -84,10 +82,7 @@ if st.session_state.prompt_count >= 3:
     st.info(f"⚡ {st.session_state.user_name}, you have used all 3 free daily analyses allowed for Free accounts. Upgrade to Pro to unlock unlimited access to the ultra-fast Llama 3 engine.")
     st.button("💎 Upgrade to Premium Pro ($4.99/mo)", disabled=True)
 else:
-    # Αν δεν έχει φτάσει το όριο, το chat είναι ανοιχτό!
     if user_input := st.chat_input("Type your dilemma or question here..."):
-        
-        # Αυξάνουμε τον μετρητή κατά 1
         st.session_state.prompt_count += 1
         
         with st.chat_message("user"):
@@ -100,21 +95,19 @@ else:
             message_placeholder.write("🧠 High-speed engine is processing data...")
             
             try:
-                # Σύνδεση με το επίσημο, υπερ-σταθερό Groq API
                 client = Groq(api_key=GROQ_API_KEY)
                 chat_completion = client.chat.completions.create(
                     messages=st.session_state.messages,
-                    model="llama3-8b-8192", # Το πιο γρήγορο και έξυπνο μοντέλο ανοιχτού κώδικα
+                    model="llama3-8b-8192",
                 )
                 response = chat_completion.choices.message.content
                 message_placeholder.write(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
-                st.rerun() # Ανανέωση για να αλλάξει ο μετρητής στο Sidebar live!
+                st.rerun()
             except Exception as e:
                 message_placeholder.write("An authentication error occurred. Please make sure your Groq API Key is valid.")
 
 st.write("---")
-# Οι 3 Κάρτες «Εγγύησης»
 col1, col2, col3 = st.columns(3)
 with col1:
     st.subheader("❄️ Zero Emotion")
