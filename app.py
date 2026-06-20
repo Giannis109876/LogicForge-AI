@@ -6,17 +6,35 @@ import random
 # 1. Configuration & Premium Dark Cyber UI
 st.set_page_config(page_title="LogicForge AI Pro", page_icon="⚡", layout="centered")
 
-# Custom CSS για εντυπωσιακό, premium design
+# Custom CSS για εντυπωσιακό design και διόρθωση χρωμάτων στα chat μηνύματα
 st.markdown("""
     <style>
+    /* Γενικό Background */
     .stApp { background-color: #0b0f19; color: #e2e8f0; }
     div[data-testid="stSidebar"] { background-color: #070a13 !important; border-right: 1px solid #1e293b; }
+    
+    /* Κουμπιά */
     .stButton>button { 
         width: 100%; border-radius: 8px; font-weight: bold; 
         background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; border: none;
         transition: all 0.3s ease;
     }
     .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+    
+    /* Διόρθωση των Chat Boxes για να ΜΗΝ είναι άσπρα */
+    div[data-testid="stChatMessage"] {
+        background-color: #111827 !important; 
+        border: 1px solid #1e293b !important;
+        border-radius: 10px !important;
+        color: #e2e8f0 !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Διόρθωση κειμένου μέσα στο chat */
+    div[data-testid="stChatMessage"] p {
+        color: #e2e8f0 !important;
+    }
+
     .premium-lock {
         background: linear-gradient(135deg, #7f1d1d, #dc2626); padding: 20px;
         border-radius: 12px; border: 1px solid #ef4444; text-align: center; margin: 20px 0;
@@ -29,21 +47,25 @@ if "user_name" not in st.session_state: st.session_state.user_name = ""
 if "prompt_count" not in st.session_state: st.session_state.prompt_count = 0
 if "messages" not in st.session_state: st.session_state.messages = []
 
-# Συναρτήση AI - Ασφαλής αποστολή ιστορικού μέσω Pollinations API
+# Συναρτήση AI - Εγγυημένη μέθοδος αποστολής text
 def fetch_ai_response(messages_list):
     try:
-        payload = {"messages": []}
+        # Μετατροπή όλου του ιστορικού σε ένα ενιαίο κείμενο (string) για να μην κρασάρει ποτέ το API
+        full_prompt = ""
         for m in messages_list:
-            payload["messages"].append({"role": m["role"], "content": m["content"]})
-            
-        response = requests.post(
-            "https://pollinations.ai",
-            json=payload,
-            timeout=15
-        )
+            if m["role"] == "system":
+                full_prompt += f"Instructions: {m['content']}\n"
+            else:
+                full_prompt += f"{m['role']}: {m['content']}\n"
+        full_prompt += "assistant:"
+
+        # Κλήση με GET (πιο γρήγορο και σταθερό για text)
+        url = f"https://pollinations.ai{requests.utils.quote(full_prompt)}?model=openai"
+        response = requests.get(url, timeout=15)
+        
         if response.status_code == 200 and response.text.strip():
             return response.text
-    except Exception:
+    except Exception as e:
         pass
     return None
 
@@ -57,16 +79,14 @@ with st.sidebar:
         rem = max(0, 3 - st.session_state.prompt_count)
         st.markdown(f"🔋 **Daily Tokens:** `{rem} / 3 Daily Analyses`")
         
-        # Μπάρα προόδου για τα δωρεάν prompts
         st.progress(rem / 3)
         st.write("---")
         
-        # Εργαλεία Διαχείρισης
         st.subheader("🛠️ Session Controls")
         if st.button("🔄 Clear Chat Memory"):
             st.session_state.messages = [{
                 "role": "system", 
-                "content": f"You are a cold Logic Engineer. Ignore emotions. ALWAYS reply in the exact same language the user writes to you. Address the user by their name: {st.session_state.user_name}. Analyze everything exclusively based on logic, pros and cons, and provide a crystal clear, brutal, and realistic conclusion. Structure your answer using markdown headers for clarity."
+                "content": f"You are a cold Logic Engineer. Ignore emotions. ALWAYS reply in the exact same language the user writes to you. Address the user by their name: {st.session_state.user_name}. Analyze everything exclusively based on logic, pros and cons, and provide a crystal clear, brutal, and realistic conclusion."
             }]
             st.rerun()
             
@@ -76,7 +96,6 @@ with st.sidebar:
             st.session_state.messages = []
             st.rerun()
             
-        # Εξαγωγή Report σε αρχείο TXT αν υπάρχει ιστορικό συζήτησης
         if len(st.session_state.messages) > 1:
             chat_text = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in st.session_state.messages if m["role"] != "system"])
             st.download_button("📥 Export Logic Report (TXT)", data=chat_text, file_name="logic_report.txt", mime="text/plain")
@@ -98,7 +117,7 @@ if not st.session_state.user_name:
             st.session_state.user_name = name_input.strip()
             st.session_state.messages = [{
                 "role": "system", 
-                "content": f"You are a cold Logic Engineer. Ignore emotions. ALWAYS reply in the exact same language the user writes to you. Address the user by their name: {st.session_state.user_name}. Analyze everything exclusively based on logic, pros and cons, and provide a crystal clear, brutal, and realistic conclusion. Structure your answer using markdown headers for clarity."
+                "content": f"You are a cold Logic Engineer. Ignore emotions. ALWAYS reply in the exact same language the user writes to you. Address the user by their name: {st.session_state.user_name}. Analyze everything exclusively based on logic, pros and cons, and provide a crystal clear, brutal, and realistic conclusion."
             }]
             st.rerun()
         else:
