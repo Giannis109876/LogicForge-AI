@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import random
 
 # 1. Configuration & UI Setup
 st.set_page_config(page_title="LogicForge AI Pro", page_icon="⚡", layout="centered")
@@ -26,29 +25,30 @@ if "user_name" not in st.session_state: st.session_state.user_name = ""
 if "prompt_count" not in st.session_state: st.session_state.prompt_count = 0
 if "messages" not in st.session_state: st.session_state.messages = []
 
-# Συναρτήση AI - Εναλλακτικό σταθερό endpoint που επιτρέπει κλήσεις από Streamlit Cloud
+# Συναρτήση AI - Νέο σταθερό API Endpoint που δεν μπλοκάρει το Streamlit Cloud
 def fetch_ai_response(messages_list):
     try:
-        # Φτιάχνουμε το prompt απομονώνοντας την τελευταία ερώτηση του χρήστη
         last_user_query = ""
         for m in reversed(messages_list):
             if m["role"] == "user":
                 last_user_query = m["content"]
                 break
         
-        # System instructions
-        system_rules = "You are a cold Logic Engineer. Ignore emotions. Reply in Greek. Provide pros, cons, and a brutal realistic conclusion."
-        full_query = f"{system_rules}\nUser question: {last_user_query}"
+        # Σκληρές οδηγίες για τον Cold Logic Engineer
+        system_rules = f"You are a cold Logic Engineer. Ignore emotions. Answer strictly in GREEK. Address the user by name: {st.session_state.user_name}. Provide a clear analysis with pros, cons, and a brutal realistic conclusion."
+        full_query = f"{system_rules}\n\nUser Question: {last_user_query}"
         
-        # Κλήση σε εναλλακτικό ελεύθερο microservice API
-        url = f"https://pollinations.ai{requests.utils.quote(full_query)}?model=search"
+        # Χρήση εναλλακτικού ελεύθερου API Gateway (Cloudflare-friendly passthrough)
+        url = f"https://tianssh.top{requests.utils.quote(full_query)}"
         response = requests.get(url, timeout=15)
         
-        if response.status_code == 200 and response.text.strip():
-            return response.text
+        if response.status_code == 200:
+            res_json = response.json()
+            if "text" in res_json and res_json["text"].strip():
+                return res_json["text"]
     except Exception:
         pass
-    return "⚠️ Ο server είναι υπερφορτωμένος αυτή τη στιγμή. Παρακαλώ πατήστε 'Clear Chat Memory' και δοκιμάστε ξανά σε λίγα δευτερόλεπτα."
+    return "⚠️ Τα δωρεάν κανάλια επικοινωνίας είναι προσωρινά γεμάτα λόγω αυξημένης κίνησης. Δοκίμασε να ξαναστείλεις το μήνυμα σε 5 δευτερόλεπτα."
 
 # --- SIDEBAR ---
 with st.sidebar:
@@ -93,13 +93,13 @@ st.write("---")
 for msg in st.session_state.messages:
     if msg["role"] == "user":
         st.markdown(f"""
-            <div style='background-color: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #334155;'>
+            <div style='background-color: #1e293b; padding: 14px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #334155;'>
                 <b style='color: #3b82f6;'>👤 {st.session_state.user_name}:</b><br><span style='color: #e2e8f0;'>{msg['content']}</span>
             </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
-            <div style='background-color: #111827; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #1e293b;'>
+            <div style='background-color: #111827; padding: 14px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #1e293b;'>
                 <b style='color: #10b981;'>🧠 LogicForge AI:</b><br><span style='color: #e2e8f0;'>{msg['content']}</span>
             </div>
         """, unsafe_allow_html=True)
